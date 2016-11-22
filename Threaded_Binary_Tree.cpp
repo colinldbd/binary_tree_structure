@@ -1,6 +1,6 @@
-//��ԭ�еĶ������Ļ����ϴ���һ������������
-//ֻ��Ҫ�޸�һ�½ڵ�Ľṹ���ڱ����Ĺ����жԸ����ڵ���д�������
-//���������������������Լ��������������������Ĵ����262�п�ʼ
+//在原有的二叉树的基础上创建一个线索二叉树
+//只需要修改一下节点的结构并在遍历的过程中对各个节点进行处理就行
+//中序，先序线索化二叉树以及按照线索遍历二叉树的代码从262行开始
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
@@ -39,7 +39,7 @@ BiTree N_CreateBiTree()
 	char LR;
 	bt = NULL;
 
-	printf("�밴˳������ڵ��˫�ף��ڵ��Լ�LR���ֵ: \n");
+	printf("请按顺序输入节点的双亲，节点以及LR标记值: \n");
 	scanf("%s %d", par.name, &par.number);
 	scanf("%s %d", data.name, &data.number);
 	scanf(" %c", &LR);
@@ -57,21 +57,21 @@ BiTree N_CreateBiTree()
 		if (ElemIsEmpty(par))
 		{
 			bt = P;
-			Q.push(P);            //�����ӻ�û��ȷ���Ľڵ����
-								  //���ӻ�ûȷ����������û��ָ���Һ��ӻ��߿�ʼ�����+1�Ľڵ����ڵ�
+			Q.push(P);            //将孩子还没有确定的节点入队
+								  //孩子还没确定的条件是没有指定右孩子或者开始往深度+1的节点插入节点
 		}
 		else
 		{
 			R = Q.front();
 			while (strcmp(R->data.name, par.name) != 0)
 			{
-				Q.pop();   //���ʶ��У��������Ǻ��ӻ�û��ȷ���Ľڵ㣬ͨ�������������ҵ���Ӧ��˫�׽ڵ�
+				Q.pop();   //访问队列，队列中是孩子还没被确定的节点，通过遍历队列来找到对应的双亲节点
 						   //if (!Q.empty())
-				R = Q.front();//������һ�����⣬�˴��ǰ��������д��ģ�
+				R = Q.front();//这里有一个问题，此处是按树的深度写入的，
 							  //else
 							  //fprintf(stderr,"Not found parent.\n");
-							  //����ʼ����һ�����ڵ�ʱ����һ��Ľڵ㲻���ٱ����Ӻ��ӣ���Ϊ�����ʼ�����²�ڵ㣬�ϲ�ڵ��Ѿ������ˡ�
-							  //����˫�׽ڵ��Ѿ����ӣ������Ҳ���˫�׽ڵ㣬������г�Ա���ӣ��������front�����ͻ�����ڴ����.
+							  //当开始往下一层加入节点时，上一层的节点不能再被添加孩子，因为如果开始访问下层节点，上层节点已经出队了。
+							  //由于双亲节点已经出队，函数找不到双亲节点，会把所有成员出队，最后再用front（）就会访问内存出错.
 			}
 			if (LR == 'L')
 			{
@@ -84,7 +84,7 @@ BiTree N_CreateBiTree()
 			}
 			Q.push(P);
 		}
-		printf("�밴˳������ڵ��˫�ף��ڵ��Լ�LR���ֵ: \n");
+		printf("请按顺序输入节点的双亲，节点以及LR标记值: \n");
 		scanf("%s %d", par.name, &par.number);
 		scanf("%s %d", data.name, &data.number);
 		scanf(" %c", &LR);
@@ -122,8 +122,8 @@ BiTree GetRightChild(BiTree &bt)
 		return bt->Rch;
 }
 
-//����Զ������ı�������
-int PreOrderTravBiTree(BiTree bt)//�������
+//定义对二叉树的遍历操作
+int PreOrderTravBiTree(BiTree bt)//先序遍历
 {
 	if (TreeIsEmpty(bt))
 		return 1;
@@ -136,7 +136,7 @@ int PreOrderTravBiTree(BiTree bt)//�������
 	}
 }
 
-int InOrderTravBiTree(BiTree bt)//�������
+int InOrderTravBiTree(BiTree bt)//中序遍历
 {
 	if (TreeIsEmpty(bt))
 		return 1;
@@ -148,7 +148,7 @@ int InOrderTravBiTree(BiTree bt)//�������
 	}
 }
 
-int PostOrderTravBiTree(BiTree bt)//�������
+int PostOrderTravBiTree(BiTree bt)//后序遍历
 {
 	if (TreeIsEmpty(bt))
 		return 1;
@@ -160,58 +160,58 @@ int PostOrderTravBiTree(BiTree bt)//�������
 	}
 }
 
-//�ݹ������Ȼ��������д�����ǵ�һ��������ʮ�ָ��ӵ�ʱ�򣬵ݹ��Ч�ʱȽϵ�
-//���ԣ�����ʮ�ָ��ӵ�ʱ��һ��ʹ�÷ǵݹ�ķ�ʽ�������б������ǵݹ�ı�����ʽҪ�õ�ջ�Ľṹ��
+//递归遍历虽然简单易于书写，但是当一个二叉树十分复杂的时候，递归的效率比较低
+//所以，当树十分复杂的时候，一般使用非递归的方式对树进行遍历，非递归的遍历方式要用到栈的结构。
 int PreOrderTravBiTree_nr(BiTree bt)
 {
 	stack<BitNode*> S;
 	BitNode * p;
 
 	p = bt;
-	while (1)//������ѭ��������Ϊ�������ѭ������������ʱ�������ַ�ʽ���ӷ���
+	while (1)//当继续循环的条件为多个而出循环的条件有限时，用这种方式更加方便
 	{
-		if (!TreeIsEmpty(p))       //��������Һ��Ӷ�Ϊ�գ���
+		if (!TreeIsEmpty(p))       //如果左孩子右孩子都为空，则将
 		{
 			printf("%s %d\n", p->data.name, p->data.number);
-			S.push(p);               //�ȣ����ʣ������ǰ��˫�ף��ڵ㣬Ȼ�󽫵�ǰ��˫�ף��ڵ���ջ������֮�����
-			p = p->Lch;				 //Ȼ���������
+			S.push(p);               //先（访问）输出当前（双亲）节点，然后将当前（双亲）节点入栈，方便之后访问
+			p = p->Lch;				 //然后访问左孩子
 		}
 		else if (S.empty())
 		{
 			return 1;
 		}
-		else            //���ӷ��ʹ��������ǲ��ǿգ������ʲ�����Һ��ӣ�Ϊ���ܹ������Һ��ӣ���˫�׽ڵ��ջ
+		else            //左孩子访问过（不管是不是空），访问并输出右孩子，为了能够访问右孩子，将双亲节点出栈
 		{
 			p = S.top();
-			S.pop();				 //���Ѿ�������Ľڵ��ջ
-			p = p->Rch;              //�����Һ��ӣ�����Һ���ҲΪ�գ���˫�׽ڵ��˫�׽ڵ��ջ
+			S.pop();				 //将已经遍历完的节点出栈
+			p = p->Rch;              //访问右孩子，如果右孩子也为空，则将双亲节点的双亲节点出栈
 		}
 	}
 }
 
-int InOrderTravBiTree_nr(BiTree bt)   //��ʵ����˳����һ���ģ����Ҷ����ʹ��ˣ��Ż������һ��ģ�����������ݵ�ʱ��㲻ͬ��
-									  //������˫�׽ڵ�ʱ���������������Ȼ��˫��
+int InOrderTravBiTree_nr(BiTree bt)   //其实遍历顺序都是一样的，左右都访问过了，才会访问上一层的，但是输出数据的时间点不同，
+									  //先序是双亲节点时输出，中序是先左然后双亲
 {
 	stack<BitNode *> S;
-	BitNode * p;					//��ô����Ҷ�ӽڵ�ı����أ���ʵ����Ҳ��һ���ģ�����û�����Һ��ӣ��������˳����Ҫ
-									//��Ϊ��ֻ�������ǰ�ڵ㣨˫�ף���ֻ�����������˫���ٷ������ң������ȷ������ٷ�����
+	BitNode * p;					//怎么看待叶子节点的遍历呢？其实两者也是一样的，由于没有左右孩子，所以输出顺序不重要
+									//因为都只能输出当前节点（双亲），只是先序先输出双亲再访问左右，中序先访问左，再访问中
 
 	p = bt;
 	while (1)
 	{
 		if (!TreeIsEmpty(p))
 		{
-			S.push(p);         //����ǰ��˫�ף��ڵ���ջ�����Ȳ������ǰ���
-			p = p->Lch;			//���������
+			S.push(p);         //将当前（双亲）节点入栈，但先不输出当前结点
+			p = p->Lch;			//先输出左孩子
 		}
 		else if (S.empty())
 			return 1;
 		else
 		{
 			p = S.top();
-			S.pop();          //��˫�׽ڵ��ջ�������˫�׽ڵ��ֵ
-			printf("%s %d\n", p->data.name, p->data.number); //Ȼ�����˫�׽ڵ�
-			p = p->Rch;       //�������Һ���
+			S.pop();          //将双亲节点出栈，并输出双亲节点的值
+			printf("%s %d\n", p->data.name, p->data.number); //然后输出双亲节点
+			p = p->Rch;       //最后输出右孩子
 		}
 	}
 }
@@ -234,15 +234,15 @@ int PostOrderTravBiTree_nr(BiTree bt)
 			if (S.empty())
 				return 1;
 			p = S.top();
-			while (p->Rch == NULL || p->Rch == pr)        //������Ϊ�գ����ȷ����Һ���
+			while (p->Rch == NULL || p->Rch == pr)        //当左孩子为空，首先访问右孩子
 			{
 
-				//�Һ���Ϊ�ջ����Һ�����֮ǰ�ѱ������,��˫�׳�ջ�����˫��
+				//右孩子为空或者右孩子在之前已被输出过,则将双亲出栈，输出双亲
 				S.pop();
 				printf("%s %d\n", p->data.name, p->data.number);
-				pr = p;      //pr���ڿ����Һ��ӣ���Ϊ˫�׽ڵ������ѭ���л᲻�ϵط����Һ��ӣ����pr��Ȼ������
-							 //����Һ��ӽ��б������Һ��ӱ������֮��pr=�Һ��ӣ���ʱ˫�׵��Һ��ӵ���pr��
-							 //˵���Һ����Ѿ�������ˣ�Ӧ�����˫���ˡ����û��pr���жϣ��ͻ᲻�ϱ����Һ��������ѭ��
+				pr = p;      //pr用于控制右孩子，因为双亲节点在这个循环中会不断地访问右孩子，如果pr任然是左孩子
+							 //则对右孩子进行遍历，右孩子遍历完毕之后，pr=右孩子，此时双亲的右孩子等于pr，
+							 //说明右孩子已经输出过了，应该输出双亲了。如果没有pr的判断，就会不断遍历右孩子造成死循环
 				if (S.empty())
 					return 1;
 				p = S.top();
@@ -253,14 +253,14 @@ int PostOrderTravBiTree_nr(BiTree bt)
 }
 
 
-//��Ȼ���ǿ��Եõ�һ������������֮��Ķ����������ǲ��������ǿ������ɵر���������ΪҪ����������
-//����Ҫ�ҵ���������������ĵ�һ���ڵ㣬����Ȼ�ڴ��������²��Ǹ��ڵ㡣
-//Ϊ�˷����������������������б���������Ӧ������һͷ�ڵ�
-//��ͷ�ڵ��Lch��ָ��ָ��������ĸ��ڵ㣬Rch���ָ��ָ���������ʱ���ʵ����һ���ڵ�
-//ͬʱ������������ĵ�һ���ڵ��Lch��ָ��ͷ�ڵ㣬��������������һ���ڵ��Rch��Ҳָ��ͷ�ڵ�
-//����һ�����ȿ�������ͷ�ڵ�˳�ź�̷��ʵ����һ���ڵ㣬Ҳ��������ǰ�����ʵ���һ���ڵ㡣
-BiTree pre=NULL;     //����ǰ���ͺ�̽ڵ㡣
-int InThreading(BiTree &bt)//���������������������,����ǰ�����к��,����ͺ����������
+//虽然我们可以得到一棵中序线索化之后的二叉树，但是不代表我们可以轻松地遍历它，因为要按线索遍历
+//首先要找到这棵线索二叉树的第一个节点，它显然在大多数情况下不是根节点。
+//为了方便中序线索化二叉树进行遍历，我们应该添加一头节点
+//令头节点的Lch域指针指向二叉树的根节点，Rch域的指针指向中序遍历时访问的最后一个节点
+//同时，令中序遍历的第一个节点的Lch域指向头节点，令中序遍历的最后一个节点的Rch域也指向头节点
+//这样一来，既可以沿着头节点顺着后继访问到最后一个节点，也可以沿着前驱访问到第一个节点。
+BiTree pre=NULL;     //设置前驱和后继节点。
+int InThreading(BiTree &bt)//中序遍历创建线索二叉树,既有前驱又有后继,先序和后序遍历类似
 {
 	BitNode * p;
 
@@ -269,15 +269,15 @@ int InThreading(BiTree &bt)//���������������������,����ǰ�����к��,����ͺ���
 	{
 		//if(p->Ltag==Link)
 			InThreading(p->Lch);
-		if (!p->Lch)                   //Ϊ��̽ڵ㽨��ǰ��
+		if (!p->Lch)                   //为后继节点建立前驱
 		{
 			p->Ltag = Thread;
 			p->Lch = pre;
 		}
 		if (!p->Rch)
-			p->Rtag = Thread;        //ֻҪû���Һ��ӣ�����RchӦ�����ó�ʲô��������RtagΪThread,
-									 //����Ϊ�˷�ֹFindInNext()�����ڷ���β�ڵ��ʱ�������
-		if(pre!=NULL&&!pre->Rch)      //Ϊǰ���ڵ㽨�����
+			p->Rtag = Thread;        //只要没有右孩子，不管Rch应该设置成什么，首先置Rtag为Thread,
+									 //这是为了防止FindInNext()函数在访问尾节点的时候出错。
+		if(pre!=NULL&&!pre->Rch)      //为前驱节点建立后继
 		{
 			pre->Rtag = Thread;
 			pre->Rch = p;
@@ -293,20 +293,19 @@ int InThreading(BiTree &bt)//���������������������,����ǰ�����к��,����ͺ���
 BiTree CreateInThreadHead(BiTree &bt)
 {
 	BitNode * p, *T;
-
-	T = (BiTree)malloc(sizeof(BitNode)); //Ϊ�����������һ��ͷ�ڵ㡣
+	T = (BiTree)malloc(sizeof(BitNode)); //为中序遍历创建一个头节点。
 	if (!T)
 	{
 		fprintf(stderr, "OUT OF SPACE!!!\n");
 		exit(0);
 	}
-	//T->Lch = bt;            //ͷ�ڵ��Lch��ָ��ָ����ڵ㣨�˴����ã��������ͷ�ڵ������д��
-	p = bt;										//�����������һ���ڵ��Lch��ָ��ͷ�ڵ�
+	//T->Lch = bt;            //头节点的Lch域指针指向根节点（此处不用，先序遍历头节点才这样写）
+	p = bt;										//将中序遍历第一个节点的Lch域指向头节点
 	while (p->Lch)
 		p = GetLeftChild(p);
 	p->Lch = T;
 	T->Lch = p;
-	p = bt;										//��������������һ���ڵ��Rch��ָ��ͷ�ڵ�
+	p = bt;										//将中序遍历的最后一个节点的Rch域指向头节点
 	while (p->Rch)
 		p = GetRightChild(p);
 	T->Rch = p;
@@ -315,7 +314,7 @@ BiTree CreateInThreadHead(BiTree &bt)
 	return T;
 }
 
-int PreThreading(BiTree &bt)            //���������������������
+int PreThreading(BiTree &bt)            //先序遍历创建线索二叉树
 {
 	BitNode * p;
 
@@ -327,14 +326,15 @@ int PreThreading(BiTree &bt)            //���������������������
 			p->Ltag = Thread;
 			p->Lch = pre;
 		}
-		if(pre!=NULL&&!pre->Rch)          //һ�����ܷ��ʿյ�pre������������������������
-										//�˴����ʿյ�pre�ڴ�϶������������
+		if(pre!=NULL&&!pre->Rch)          //一定不能访问空的pre！！！！！！！！！！！！
+										//此处访问空的pre内存肯定会出错！！！
 		{
 			pre->Rtag = Thread;
 			pre->Rch = p;
 		}
 		pre = p;
-		if(p->Ltag==Link)              //����ж�Ҳ�����٣�Ϊʲô�����ٱ����ظ��ڵ㣿
+		if(p->Ltag==Link)              //由于先序遍历中，之前的修改将p->Lch指向了前驱，所以这里如果没有这个判断，则会重新遍历前驱节点
+						//陷入一个死循环
 			PreThreading(p->Lch);
 		if(p->Rtag==Link)              
 			PreThreading(p->Rch);
@@ -343,7 +343,7 @@ int PreThreading(BiTree &bt)            //���������������������
 	return 1;
 }
 
-//��������µ���������������p�ĺ�̵Ĳ���
+//先序遍历下的线索二叉树的求p的后继的操作
 BitNode * FindPreNext(BiTree &p,BiTree &Q)
 {
 	if (p->Ltag == Thread)
@@ -354,7 +354,7 @@ BitNode * FindPreNext(BiTree &p,BiTree &Q)
 	return Q;
 }
 
-//������������̵Ĳ���
+//中序遍历下求后继的操作
 BitNode * FindInNext(BiTree &p,BiTree & Q)
 {
 	if (p->Rtag == Thread)
@@ -362,19 +362,19 @@ BitNode * FindInNext(BiTree &p,BiTree & Q)
 	else
 	{
 		Q = p->Rch;
-		while (Q->Ltag != Thread)         //�������������ڴ���ʴ�����Ϊ֮ǰ����������ʱ��
-										//��û�а����ڵ��Rtag����ΪThread�������˷��ʿսڵ��Ltag
-										//���Ի�������ѽ����
+		while (Q->Ltag != Thread)         //访问这里会出现内存访问错误，因为之前创建线索的时候
+										//并没有把最后节点的Rtag设置为Thread，导致了访问空节点的Ltag
+										//所以会出错（已解决）
 			Q = Q->Lch;
 	}
 
 	return Q;
 }
 
-//��������������˳�����������
+//利用线索二叉树顺序遍历二叉树
 int PreThreadTrav(BiTree bt)
 {
-	BitNode * p, *Q = NULL;       //��סQҪ��ʼ�������ܽ�û�г�ʼ����ָ�봫�뺯����
+	BitNode * p, *Q = NULL;       //记住Q要初始化，不能将没有初始化的指针传入函数。
 
 	p = bt;
 	while (p)
@@ -407,18 +407,18 @@ int main()
 	BiTree InHead;
 
 	BT = N_CreateBiTree();
-	PreThreading(BT);               //ǰ����������������ֻ�ֱܷ���ԣ��㲻��ͬʱ��������������һ������
-	PreThreadTrav(BT);			  //ǰ�����ǰ������������
-	//InThreading(BT);				  //����������������
+	PreThreading(BT);               //前序线索化二叉树，只能分别测试，你不能同时先序中序线索化一棵树。
+	PreThreadTrav(BT);			  //前序遍历前序线索二叉树
+	//InThreading(BT);				  //中序线索化二叉树
 	//InHead = CreateInThreadHead(BT);
-	//InThreadTrav(InHead->Lch,InHead);		  //���������������������
+	//InThreadTrav(InHead->Lch,InHead);		  //中序遍历中序线索二叉树
 
 	return 0;
 }
 
 
 
-//��Ҫ��������⣺
-//ǰ������������������ͷ�ڵ�Ķ����ǲ�ͬ�ģ���ͷ�ڵ�ĸĽ��������ѽ����
-//L->Tlag==Link����жϵ����ã�����û�����⣬��������������,�õ�������������⣨δ�������
-//���������Ŀ�ʼ�ͽ������������ѽ����
+//还要补充的问题：
+//前序线索和中序线索的头节点的定义是不同的（对头节点的改进）？（已解决）
+//L->Tlag==Link这个判断的作用？中序没有问题，但是先序有问题,用调试来看这个问题（未解决）？
+//遍历线索的开始和结束条件？（已解决）
